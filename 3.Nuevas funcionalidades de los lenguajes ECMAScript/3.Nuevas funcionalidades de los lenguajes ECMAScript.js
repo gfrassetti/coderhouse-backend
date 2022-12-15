@@ -27,7 +27,7 @@ class ProductManager {
 
     this.isFound = this.products.some(element => element.id === this.product.id)
     
-    if(this.isFound)
+    if(this.isFound || title != undefined || description != undefined || price != undefined || thumbnail != undefined || stock != undefined)
     {
       console.log("Element with id already in list")
       this.getProducts()
