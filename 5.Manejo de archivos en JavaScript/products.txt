@@ -1,0 +1,1 @@
+[{"title":"Notebook","description":"Asus Zenbook i5","price":"$ 150.000","thumbnail":"/static/img/asus_zenbook.webp","stock":10,"id":0}][{"0":"Hola","title":"Notebook","description":"Asus Zenbook i5","price":"$ 150.000","thumbnail":"/static/img/asus_zenbook.webp","stock":10,"id":0}]
