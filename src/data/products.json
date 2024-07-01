@@ -1,0 +1,13 @@
+[
+  {
+    "id": "f3a81781-013f-47bc-aa23-45a326cae4b7",
+    "title": "Product posted via postman",
+    "description": "Description 1",
+    "code": "P1",
+    "price": 150,
+    "status": true,
+    "stock": 10,
+    "category": "Category 1",
+    "thumbnails": []
+  }
+]
