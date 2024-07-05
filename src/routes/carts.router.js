@@ -49,33 +49,30 @@ cartsRouter.get("/", (req, res) => {
 });
 
 /* GET id */
-cartsRouter.get("/:pid", (req, res) => {
-  const cartId = req.params.pid;
+cartsRouter.get("/:cid", (req, res) => {
+  const cartId = req.params.cid;
   const carts = readCarts();
+
   if (!Array.isArray(carts)) {
     console.error("Carts data is not an array");
     return res.status(500).send("Internal server error");
   }
-  const cart = carts.find((p) => p.id === cartId);
+
+  const cart = carts.find((c) => c.id === cartId);
   if (cart) {
-    res.json(cart);
+    res.json(cart.products);
   } else {
-    res.status(404).send("cart not found");
+    res.status(404).send("Cart not found");
   }
 });
 
 /* POST */
 cartsRouter.post("/", (req, res) => {
   const carts = readCarts();
-  const { products } = req.body;
-
-  if (!Array.isArray(products)) {
-    return res.status(400).send("Products must be an array");
-  }
 
   const newCart = {
     id: uuidv4(),
-    products: products,
+    quantity: 1,
   };
 
   carts.push(newCart);
@@ -111,6 +108,7 @@ cartsRouter.post("/:cid/product/:pid", (req, res) => {
     };
     cart.products.push(newProduct);
     writeCarts(carts);
+    console.log(carts);
   }
   res.status(201).json(product);
   console.log(`Product added to cart: id: ${pid}`);
