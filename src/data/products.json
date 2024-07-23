@@ -1,13 +1,9 @@
 [
   {
-    "id": "4bf6a175-dc9a-4cfe-bbcb-5e1afe259048",
-    "title": "New Product",
-    "description": "new product",
-    "code": "NP123",
-    "price": 150,
-    "status": true,
-    "stock": 10,
-    "category": "Category 1",
-    "thumbnails": []
+    "id": "aab0d897-ff9e-4d4a-baae-860bca976f0e",
+    "title": "Producto 1",
+    "description": "entrega 2",
+    "code": "NOSE123",
+    "price": "12000"
   }
 ]

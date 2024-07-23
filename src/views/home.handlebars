@@ -11,10 +11,11 @@
 </body>
 </html>
 {{/inline}}
-
-<h1 class="text-2xl font-bold mb-4">Lista de Productos</h1>
-<ul id="product-list" class="list-disc pl-5">
+<section class="w-full text-center max-w-7xl p-2 mx-auto flex justify-center flex-col">
+<h1 class="text-2xl font-bold mb-4 italic">Lista de Productos</h1>
+<ul id="product-list" class="list-disc pl-5 block w-48 mx-auto">
   {{#each products}}
     <li class="mb-2">{{this.title}} - {{this.description}} - ${{this.price}}</li>
   {{/each}}
 </ul>
+</section>

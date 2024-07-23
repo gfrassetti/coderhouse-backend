@@ -1,13 +1,12 @@
 import { Router } from "express";
-import { fileURLToPath } from "url";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
+import { fileURLToPath } from "url";
 import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const productsPath = path.join(__dirname, "../data/products.json");
-console.log("productsPath: ", productsPath);
 const productsRouter = Router();
 
 const readProducts = () => {
@@ -45,12 +44,7 @@ productsRouter.get("/", (req, res) => {
 /* GET id */
 productsRouter.get("/:pid", (req, res) => {
   const productId = req.params.pid;
-  console.log("productId: ", productId);
   const products = readProducts();
-  if (!Array.isArray(products)) {
-    console.error("Products data is not an array");
-    return res.status(500).send("Internal server error");
-  }
   const product = products.find((p) => p.id === productId);
   if (product) {
     res.json(product);
@@ -78,18 +72,10 @@ productsRouter.post("/", (req, res) => {
     thumbnails: [],
   };
 
-  if (!Array.isArray(products)) {
-    console.error("Products data is not an array:", products);
-    return res.status(500).send("Internal server error");
-  }
   products.push(newProduct);
   writeProducts(products);
-
-  // Emitir el evento a todos los clientes conectados
-  req.io.emit("products", products);
-
+  req.app.get("io").emit("products", products);
   res.status(201).json(newProduct);
-  console.log(`Product created: id: ${newProduct.id}`);
 });
 
 /* PUT */
@@ -120,32 +106,21 @@ productsRouter.put("/:pid", (req, res) => {
   product.stock = stock;
   product.category = category;
   writeProducts(products);
-
-  // Emitir el evento a todos los clientes conectados
-  req.io.emit("products", products);
-
   res.json(product);
-  console.log(`Product ${productId} updated:`);
 });
 
 /* DELETE */
 productsRouter.delete("/:pid", (req, res) => {
   const productId = req.params.pid;
-  const products = readProducts();
-
+  let products = readProducts();
   const productIndex = products.findIndex((p) => p.id === productId);
   if (productIndex === -1) {
     return res.status(404).send("Product not found");
   }
-
   const deletedProduct = products.splice(productIndex, 1);
   writeProducts(products);
-
-  // Emitir el evento a todos los clientes conectados
-  req.io.emit("products", products);
-
-  res.status(202).send(`Product ${productId} deleted:`);
-  console.log(`Product ${productId} deleted:`, deletedProduct);
+  req.app.get("io").emit("products", products);
+  res.status(202).send(`Product ${productId} deleted: ${deletedProduct}`);
 });
 
 productsRouter.use((err, req, res, next) => {

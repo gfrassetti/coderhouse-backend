@@ -7,6 +7,7 @@ import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import { v4 as uuidv4 } from "uuid";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,52 +16,40 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server);
 
-// Configurar Handlebars sin un diseño predeterminado
 app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
 app.set("views", path.join(__dirname, "views"));
 
-// Middlewares
+//Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "../public"))); // Middleware para servir archivos estáticos
 
-// Pasar la instancia de io a cada solicitud
-app.use((req, res, next) => {
-  req.io = io;
-  next();
-});
-
 app.use("/api/products", productsRouter);
 app.use("/api/carts", cartsRouter);
 
-// Leer productos
+//leer productos
 const readProducts = () => {
   const productsFilePath = path.join(__dirname, "data", "products.json");
   const data = fs.readFileSync(productsFilePath, "utf8");
   return JSON.parse(data);
 };
 
-// Ruta principal
 app.get("/", (req, res) => {
   res.render("home", { products: readProducts() });
 });
 
-// Nueva ruta para productos en tiempo real
+//productos en tiempo real
 app.get("/realtimeproducts", (req, res) => {
   res.render("realTimeProducts", { products: readProducts() });
 });
 
-// Configurar Socket.io
+//socket.io
 io.on("connection", (socket) => {
   console.log("New client connected");
 
-  // Enviar la lista de productos cuando un cliente se conecta
+  //enviar la lista de productos cuando un cliente se conecta
   socket.emit("products", readProducts());
-
-  socket.on("disconnect", () => {
-    console.log("Client disconnected");
-  });
 
   socket.on("addProduct", (product) => {
     const products = readProducts();
@@ -73,7 +62,7 @@ io.on("connection", (socket) => {
       path.join(__dirname, "data", "products.json"),
       JSON.stringify(products, null, 2)
     );
-    io.emit("products", products); // Emitir a todos los clientes la lista actualizada de productos
+    io.emit("products", products);
   });
 
   socket.on("deleteProduct", (productId) => {
@@ -83,11 +72,14 @@ io.on("connection", (socket) => {
       path.join(__dirname, "data", "products.json"),
       JSON.stringify(products, null, 2)
     );
-    io.emit("products", products); // Emitir a todos los clientes la lista actualizada de productos
+    io.emit("products", products);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
   });
 });
 
-// Iniciar el servidor
 server.listen(8080, () => {
   console.log("Server running on port 8080");
 });

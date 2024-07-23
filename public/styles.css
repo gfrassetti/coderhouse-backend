@@ -617,6 +617,10 @@ video {
   margin-top: 1.5rem;
 }
 
+.block {
+  display: block;
+}
+
 .inline {
   display: inline;
 }
@@ -629,6 +633,18 @@ video {
   display: grid;
 }
 
+.w-48 {
+  width: 12rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.max-w-7xl {
+  max-width: 80rem;
+}
+
 .flex-grow {
   flex-grow: 1;
 }
@@ -639,6 +655,14 @@ video {
 
 .grid-cols-1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.justify-center {
+  justify-content: center;
 }
 
 .gap-4 {
@@ -721,6 +745,10 @@ video {
 
 .font-bold {
   font-weight: 700;
+}
+
+.italic {
+  font-style: italic;
 }
 
 .text-white {
