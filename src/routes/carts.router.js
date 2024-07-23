@@ -72,7 +72,6 @@ cartsRouter.post("/", (req, res) => {
 
   const newCart = {
     id: uuidv4(),
-    quantity: 1,
   };
 
   carts.push(newCart);
@@ -91,12 +90,16 @@ cartsRouter.post("/:cid/product/:pid", (req, res) => {
     return res.status(404).send("Cart not found");
   }
 
+  if (!Array.isArray(cart.products)) {
+    cart.products = []; //crear array  products si no existe
+    //de forma tal que si existe un p con el mismo id, la q sera aumentada
+  }
+
   const product = cart.products.find((p) => p.id === pid);
-  console.log("product: ", product);
   if (product) {
     product.quantity += 1;
     writeCarts(carts);
-    res
+    return res
       .status(200)
       .send(
         `Product already in cart: id: ${pid}, current quantity: ${product.quantity}`
@@ -108,10 +111,8 @@ cartsRouter.post("/:cid/product/:pid", (req, res) => {
     };
     cart.products.push(newProduct);
     writeCarts(carts);
-    console.log(carts);
+    return res.status(201).json(newProduct);
   }
-  res.status(201).json(product);
-  console.log(`Product added to cart: id: ${pid}`);
 });
 
 cartsRouter.use((err, req, res, next) => {

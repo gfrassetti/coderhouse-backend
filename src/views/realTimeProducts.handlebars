@@ -1,0 +1,75 @@
+{{#*inline "layout"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{title}}</title>
+  <link href="/styles.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-8">
+  {{{body}}}
+</body>
+</html>
+{{/inline}}
+
+<div class="container mx-auto">
+  <h1 class="text-4xl font-bold mb-6 text-center">Lista de Productos en Tiempo Real</h1>
+  <ul id="product-list" class="list-disc pl-5 mb-6">
+    {{#each products}}
+      <li class="mb-2 text-lg">{{this.title}} - {{this.description}} - ${{this.price}}</li>
+    {{/each}}
+  </ul>
+
+  <h2 class="text-2xl font-bold mt-6 mb-4">Agregar Producto</h2>
+  <form id="add-product-form" class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <input type="text" id="title" placeholder="Título" required class="border p-2 rounded-md">
+    <input type="text" id="description" placeholder="Descripción" required class="border p-2 rounded-md">
+    <input type="text" id="code" placeholder="Código" required class="border p-2 rounded-md">
+    <input type="number" id="price" placeholder="Precio" required class="border p-2 rounded-md">
+    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Agregar</button>
+  </form>
+
+  <h2 class="text-2xl font-bold mt-6 mb-4">Eliminar Producto</h2>
+  <form id="delete-product-form" class="mb-8 flex space-x-4">
+    <input type="text" id="delete-id" placeholder="ID del producto" required class="border p-2 rounded-md flex-grow">
+    <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">Eliminar</button>
+  </form>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+
+  socket.on('products', (products) => {
+    const productList = document.getElementById('product-list');
+    productList.innerHTML = '';
+    products.forEach(product => {
+      const li = document.createElement('li');
+      li.textContent = `${product.title} - ${product.description} - $${product.price}`;
+      productList.appendChild(li);
+    });
+  });
+
+  document.getElementById('add-product-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = document.getElementById('title').value;
+    const description = document.getElementById('description').value;
+    const code = document.getElementById('code').value;
+    const price = document.getElementById('price').value;
+
+    socket.emit('addProduct', { title, description, code, price });
+
+    // Limpiar el formulario
+    document.getElementById('add-product-form').reset();
+  });
+
+  document.getElementById('delete-product-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const productId = document.getElementById('delete-id').value;
+
+    socket.emit('deleteProduct', productId);
+
+    // Limpiar el formulario
+    document.getElementById('delete-product-form').reset();
+  });
+</script>

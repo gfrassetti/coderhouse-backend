@@ -1,5 +1,4 @@
 import { Router } from "express";
-//import { products } from "../data/products.js";
 import { fileURLToPath } from "url";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
@@ -42,6 +41,7 @@ productsRouter.get("/", (req, res) => {
     res.json(products.slice(0, limit));
   }
 });
+
 /* GET id */
 productsRouter.get("/:pid", (req, res) => {
   const productId = req.params.pid;
@@ -57,12 +57,8 @@ productsRouter.get("/:pid", (req, res) => {
   } else {
     res.status(404).send("Product not found");
   }
-  if (product) {
-    res.json(product);
-  } else {
-    res.status(404).send("Product not found");
-  }
 });
+
 /* POST */
 productsRouter.post("/", (req, res) => {
   const products = readProducts();
@@ -88,6 +84,10 @@ productsRouter.post("/", (req, res) => {
   }
   products.push(newProduct);
   writeProducts(products);
+
+  // Emitir el evento a todos los clientes conectados
+  req.io.emit("products", products);
+
   res.status(201).json(newProduct);
   console.log(`Product created: id: ${newProduct.id}`);
 });
@@ -119,10 +119,15 @@ productsRouter.put("/:pid", (req, res) => {
   product.status = status;
   product.stock = stock;
   product.category = category;
-  res.json(product);
   writeProducts(products);
+
+  // Emitir el evento a todos los clientes conectados
+  req.io.emit("products", products);
+
+  res.json(product);
   console.log(`Product ${productId} updated:`);
 });
+
 /* DELETE */
 productsRouter.delete("/:pid", (req, res) => {
   const productId = req.params.pid;
@@ -135,6 +140,10 @@ productsRouter.delete("/:pid", (req, res) => {
 
   const deletedProduct = products.splice(productIndex, 1);
   writeProducts(products);
+
+  // Emitir el evento a todos los clientes conectados
+  req.io.emit("products", products);
+
   res.status(202).send(`Product ${productId} deleted:`);
   console.log(`Product ${productId} deleted:`, deletedProduct);
 });

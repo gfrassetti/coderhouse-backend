@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "id": "4bf6a175-dc9a-4cfe-bbcb-5e1afe259048",
+    "title": "New Product",
+    "description": "new product",
+    "code": "NP123",
+    "price": 150,
+    "status": true,
+    "stock": 10,
+    "category": "Category 1",
+    "thumbnails": []
+  }
+]
