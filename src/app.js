@@ -7,7 +7,7 @@ import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
-import { Product } from "./models/product.model.js";
+import Product from "./models/product.model.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,7 +30,6 @@ mongoose
     console.error("Error connecting to MongoDB Atlas:", error);
   });
 
-//views
 app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
 app.set("views", path.join(__dirname, "views"));
@@ -39,58 +38,60 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "../public")));
-
-// Rutas API
 app.use("/api/products", productsRouter);
 app.use("/api/carts", cartsRouter);
 
+// Home
 app.get("/", async (req, res) => {
   try {
-    const products = await Product.find().lean();
-    res.render("home", { products });
+    const { limit = 5, page = 1, sort, query } = req.query;
+    const options = {
+      limit: parseInt(limit),
+      page: parseInt(page),
+      sort: sort ? { price: sort } : {},
+    };
+    const filter = query
+      ? { $or: [{ category: query }, { available: query }] }
+      : {};
+
+    const products = await Product.paginate(filter, options);
+    res.render("home", {
+      products: products.docs,
+      pagination: {
+        page: products.page,
+        totalPages: products.totalPages,
+        hasNextPage: products.hasNextPage,
+        hasPrevPage: products.hasPrevPage,
+        nextPage: products.nextPage,
+        prevPage: products.prevPage,
+      },
+    });
   } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).send("Internal server error");
+    console.error("Error retrieving products:", error);
+    res.status(500).send("Error retrieving products");
   }
 });
 
+// RealTime Products
 app.get("/realtimeproducts", async (req, res) => {
-  try {
-    const products = await Product.find().lean();
-    res.render("realTimeProducts", { products });
-  } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).send("Internal server error");
-  }
+  const products = await Product.find().lean();
+  res.render("realTimeProducts", { products });
 });
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   console.log("New client connected");
 
-  socket.emit("products", async () => {
-    const products = await Product.find().lean();
-    return products;
-  });
+  socket.emit("products", await Product.find().lean());
 
   socket.on("addProduct", async (productData) => {
-    try {
-      const newProduct = new Product(productData);
-      await newProduct.save();
-      const products = await Product.find().lean();
-      io.emit("products", products);
-    } catch (error) {
-      console.error("Error adding product:", error);
-    }
+    const newProduct = new Product(productData);
+    await newProduct.save();
+    io.emit("products", await Product.find().lean());
   });
 
   socket.on("deleteProduct", async (productId) => {
-    try {
-      await Product.findByIdAndDelete(productId);
-      const products = await Product.find().lean();
-      io.emit("products", products);
-    } catch (error) {
-      console.error("Error deleting product:", error);
-    }
+    await Product.findByIdAndDelete(productId);
+    io.emit("products", await Product.find().lean());
   });
 
   socket.on("disconnect", () => {
