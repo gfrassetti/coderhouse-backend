@@ -51,10 +51,15 @@ app.get("/", async (req, res) => {
       sort: sort ? { price: sort } : {},
     };
     const filter = query
-      ? { $or: [{ category: query }, { available: query }] }
+      ? { $or: [{ category: query }, { status: query }] }
       : {};
 
     const products = await Product.paginate(filter, options);
+
+    if (!products.docs.length) {
+      console.error("No products found");
+    }
+
     res.render("home", {
       products: products.docs,
       pagination: {

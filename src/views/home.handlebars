@@ -17,7 +17,9 @@
   <ul class="list-disc pl-5 block w-full mx-auto">
     {{#each products}}
       <li class="mb-4 flex justify-between items-center">
-        <span>{{this.title}} - {{this.description}} - ${{this.price}}</span>
+        <ul>
+         <li class="mb-2">{{this.title}} - {{this.description}} - ${{this.price}}</li>
+        </ul>
         <button data-product-id="{{this._id}}" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 add-to-cart">
           Agregar al carrito
         </button>
