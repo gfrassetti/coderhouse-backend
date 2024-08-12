@@ -44,7 +44,7 @@ app.use("/api/carts", cartsRouter);
 // Home
 app.get("/", async (req, res) => {
   try {
-    const { limit = 5, page = 1, sort, query } = req.query;
+    const { limit = 10, page = 1, sort, query } = req.query;
     const options = {
       limit: parseInt(limit),
       page: parseInt(page),
