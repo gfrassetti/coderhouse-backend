@@ -27,6 +27,8 @@
     <input type="text" id="description" placeholder="Descripción" required class="border p-2 rounded-md">
     <input type="text" id="code" placeholder="Código" required class="border p-2 rounded-md">
     <input type="number" id="price" placeholder="Precio" required class="border p-2 rounded-md">
+    <input type="text" id="category" placeholder="Categoría" required class="border p-2 rounded-md">
+    <input type="number" id="stock" placeholder="Stock" required class="border p-2 rounded-md">
     <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Agregar</button>
   </form>
 
@@ -57,8 +59,10 @@
     const description = document.getElementById('description').value;
     const code = document.getElementById('code').value;
     const price = document.getElementById('price').value;
+    const category = document.getElementById('category').value;
+    const stock = document.getElementById('stock').value;
 
-    socket.emit('addProduct', { title, description, code, price });
+    socket.emit('addProduct', { title, description, code, price, category, stock });
 
     //clean up form
     document.getElementById('add-product-form').reset();

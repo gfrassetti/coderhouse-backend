@@ -1,0 +1,27 @@
+<section class="container mx-auto mt-8">
+  <h1 class="text-3xl font-bold mb-4">Carrito de Compras</h1>
+  <ul id="cart-products-list" class="list-disc pl-5">
+    {{#each cart.products}}
+      <li class="mb-2">
+        {{this.product.title}}
+        -
+        {{this.product.description}}
+        - ${{this.product.price}}
+        x
+        {{this.quantity}}
+        <button
+          onclick="removeFromCart('{{cart._id}}', '{{this.product._id}}')"
+          class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+        >Eliminar</button>
+      </li>
+    {{/each}}
+  </ul>
+</section>
+
+<script>
+  function removeFromCart(cartId, productId) {
+  fetch(`/api/carts/${cartId}/products/${productId}`, { method: 'DELETE', })
+  .then(response => response.json()) .then(data => { alert("Producto eliminado
+  del carrito"); location.reload(); }) .catch(error => { console.error('Error
+  removing product from cart:', error); }); }
+</script>

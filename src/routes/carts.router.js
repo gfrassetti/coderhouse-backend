@@ -1,117 +1,170 @@
 import { Router } from "express";
-import { fileURLToPath } from "url";
-import { v4 as uuidv4 } from "uuid";
-import path from "path";
-import fs from "fs";
+import { Cart } from "../models/cart.model.js";
+import { Product } from "../models/product.model.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const cartsPath = path.join(__dirname, "../data/carrito.json");
-console.log("cartsPath: ", cartsPath);
 const cartsRouter = Router();
 
-const readCarts = () => {
+/* GET all */
+cartsRouter.get("/", async (req, res) => {
   try {
-    const data = fs.readFileSync(cartsPath, "utf8");
-    const carts = JSON.parse(data);
-    if (!Array.isArray(carts)) {
-      throw new Error("Carts data is not an array");
+    const carts = await Cart.find();
+    if (carts.length === 0) {
+      return res.status(200).send("No carts available");
     }
-    console.log("carts: ", carts);
-    return carts;
+    const limit = req.query.limit ? parseInt(req.query.limit) : carts.length;
+    if (isNaN(limit) || limit < 1) {
+      return res.status(400).send("Invalid limit value");
+    } else {
+      res.json(carts.slice(0, limit));
+    }
   } catch (err) {
-    console.error("Error reading carts file:", err);
-    return [];
+    console.error("Error fetching carts:", err);
+    res.status(500).send("Internal server error");
   }
-};
+});
 
-const writeCarts = (carts) => {
+/* Get by id */
+cartsRouter.get("/:cid", async (req, res) => {
   try {
-    fs.writeFileSync(cartsPath, JSON.stringify(carts, null, 2));
+    const cart = await Cart.findById(req.params.cid).populate(
+      "products.product"
+    );
+    if (!cart) {
+      return res.status(404).send("Cart not found");
+    }
+    res.status(200).json(cart);
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+/* Post */
+cartsRouter.post("/", async (req, res) => {
+  try {
+    const newCart = new Cart();
+    await newCart.save();
+    res.status(201).json(newCart);
+    console.log(`Cart created: id: ${newCart._id}`);
   } catch (err) {
-    console.error("Error writing carts file:", err);
-  }
-};
-
-/* GET */
-cartsRouter.get("/", (req, res) => {
-  const carts = readCarts();
-  console.log(req.body.products);
-  if (carts.length === 0) {
-    return res.status(200).send("No products available");
-  }
-  const limit = req.query.limit ? parseInt(req.query.limit) : carts.length;
-  if (isNaN(limit) || limit < 1) {
-    return res.status(400).send("Invalid limit value");
-  } else {
-    res.json(carts.slice(0, limit));
+    console.error("Error creating cart:", err);
+    res.status(500).send("Internal server error");
   }
 });
 
-/* GET id */
-cartsRouter.get("/:cid", (req, res) => {
-  const cartId = req.params.cid;
-  const carts = readCarts();
-
-  if (!Array.isArray(carts)) {
-    console.error("Carts data is not an array");
-    return res.status(500).send("Internal server error");
-  }
-
-  const cart = carts.find((c) => c.id === cartId);
-  if (cart) {
-    res.json(cart.products);
-  } else {
-    res.status(404).send("Cart not found");
-  }
-});
-
-/* POST */
-cartsRouter.post("/", (req, res) => {
-  const carts = readCarts();
-
-  const newCart = {
-    id: uuidv4(),
-  };
-
-  carts.push(newCart);
-  writeCarts(carts);
-  res.status(201).json(newCart);
-  console.log(`Cart created: id: ${newCart.id}`);
-});
-
-cartsRouter.post("/:cid/product/:pid", (req, res) => {
+/* post by id */
+cartsRouter.post("/:cid/product/:pid", async (req, res) => {
   const { cid, pid } = req.params;
 
-  const carts = readCarts();
-  const cart = carts.find((cart) => cart.id === cid);
+  try {
+    const cart = await Cart.findById(cid);
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
 
-  if (!cart) {
-    return res.status(404).send("Cart not found");
+    const product = cart.products.find((p) => p.productId.toString() === pid);
+    if (product) {
+      product.quantity += 1;
+    } else {
+      cart.products.push({ productId: pid, quantity: 1 });
+    }
+
+    await cart.save();
+    res.status(200).json({ message: "Product added to cart", cart });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
   }
+});
 
-  if (!Array.isArray(cart.products)) {
-    cart.products = []; //crear array  products si no existe
-    //de forma tal que si existe un p con el mismo id, la q sera aumentada
+/* DELETE a product from a cart */
+cartsRouter.delete("/:cid/products/:pid", async (req, res) => {
+  try {
+    const { cid, pid } = req.params;
+    const cart = await Cart.findById(cid);
+    if (!cart) {
+      return res.status(404).send("Cart not found");
+    }
+
+    cart.products = cart.products.filter(
+      (product) => product.product.toString() !== pid
+    );
+    await cart.save();
+    res.status(200).json(cart);
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
   }
+});
 
-  const product = cart.products.find((p) => p.id === pid);
-  if (product) {
-    product.quantity += 1;
-    writeCarts(carts);
-    return res
+cartsRouter.delete("/:cid", async (req, res) => {
+  try {
+    const cart = await Cart.findById(req.params.cid);
+    if (!cart) {
+      return res.status(404).send("Cart not found");
+    }
+
+    cart.products = [];
+    await cart.save();
+    res
       .status(200)
-      .send(
-        `Product already in cart: id: ${pid}, current quantity: ${product.quantity}`
-      );
-  } else {
-    const newProduct = {
-      id: pid,
-      quantity: 1,
-    };
-    cart.products.push(newProduct);
-    writeCarts(carts);
-    return res.status(201).json(newProduct);
+      .json({ status: "success", message: "All products removed from cart" });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+/* put */
+cartsRouter.put("/:cid", async (req, res) => {
+  try {
+    const { cid } = req.params;
+    const { products } = req.body;
+
+    if (!Array.isArray(products)) {
+      return res.status(400).send("Products must be an array");
+    }
+
+    const cart = await Cart.findById(cid);
+    if (!cart) {
+      return res.status(404).send("Cart not found");
+    }
+
+    cart.products = products.map((p) => ({
+      product: p.product,
+      quantity: p.quantity,
+    }));
+
+    await cart.save();
+    res.status(200).json(cart);
+  } catch (err) {
+    console.error("Error updating cart:", err);
+    res.status(500).send("Internal server error");
+  }
+});
+/* put by i */
+cartsRouter.put("/:cid/products/:pid", async (req, res) => {
+  try {
+    const { cid, pid } = req.params;
+    const { quantity } = req.body;
+
+    if (!quantity || quantity < 1) {
+      return res.status(400).send("Quantity must be a positive number");
+    }
+
+    const cart = await Cart.findById(cid);
+    if (!cart) {
+      return res.status(404).send("Cart not found");
+    }
+
+    const cartProduct = cart.products.find((p) => p.product.toString() === pid);
+    if (!cartProduct) {
+      return res.status(404).send("Product not found in cart");
+    }
+
+    cartProduct.quantity = quantity;
+
+    await cart.save();
+    res.status(200).json(cart);
+  } catch (err) {
+    console.error("Error updating product quantity in cart:", err);
+    res.status(500).send("Internal server error");
   }
 });
 

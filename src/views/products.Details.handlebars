@@ -1,0 +1,37 @@
+{{#*inline "layout"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{product.title}}</title>
+  <link href="/styles.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-8">
+  {{{body}}}
+</body>
+</html>
+{{/inline}}
+
+<div class="container mx-auto">
+  <h1 class="text-4xl font-bold mb-6 text-center">{{product.title}}</h1>
+  <p class="text-lg mb-4">{{product.description}}</p>
+  <p class="text-lg mb-4">Price: ${{product.price}}</p>
+  <button onclick="addToCart('{{product._id}}')" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+    Agregar al carrito
+  </button>
+</div>
+
+<script>
+  function addToCart(productId) {
+    fetch(`/api/carts/${productId}`, {
+      method: 'POST',
+    })
+    .then(response => response.json())
+    .then(data => {
+      alert("Producto añadido al carrito");
+    })
+    .catch(error => {
+      console.error('Error adding product to cart:', error);
+    });
+  }
+</script>
