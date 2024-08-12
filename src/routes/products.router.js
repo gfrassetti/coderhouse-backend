@@ -49,16 +49,18 @@ productsRouter.get("/", async (req, res) => {
 /* GET product details */
 productsRouter.get("/:pid", async (req, res) => {
   try {
-    const productId = req.params.pid;
-    const product = await Product.findById(productId);
+    const { pid } = req.params;
+
+    const product = await Product.findById(pid).lean();
 
     if (!product) {
-      return res.status(404).render("error", { message: "Product not found" });
+      return res.status(404).send("Product not found");
     }
 
     res.render("productDetails", { product });
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+  } catch (err) {
+    console.error("Error fetching product details:", err);
+    res.status(500).send("Internal server error");
   }
 });
 

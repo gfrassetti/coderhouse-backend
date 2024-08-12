@@ -14,7 +14,7 @@
 
 <section class="w-full text-center max-w-7xl p-2 mx-auto flex justify-center flex-col">
   <h1 class="text-2xl font-bold mb-4 italic">Lista de Productos</h1>
-  <ul id="product-list" class="list-disc pl-5 block w-full mx-auto">
+  <ul class="list-disc pl-5 block w-full mx-auto">
     {{#each products}}
       <li class="mb-4 flex justify-between items-center">
         <span>{{this.title}} - {{this.description}} - ${{this.price}}</span>
